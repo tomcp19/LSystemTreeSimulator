@@ -19,6 +19,7 @@ class Turtle {
   int colorIndex;
   color[] col = {#728116, #26D33C, #863232, #A74444,#CE5151};
   boolean print = true;
+  float r, b, g, a, sw;
 
   Turtle(String s, float l, float t) {
     todo = s;
@@ -30,17 +31,6 @@ class Turtle {
     ends = new ArrayList<PVector>();
   } 
   
-  /*public void setTurtle(String s, float l, float t)
-{
-    todo = s;
-    len = l; 
-    theta = t;
-     ends = new ArrayList<PVector>();
-     setCount = true;
-  
-  count = 0;
-  countdata = 0;
-}*/
 
   void render() {
     
@@ -49,13 +39,20 @@ class Turtle {
     rotate(-PI/2);
     
     countdata = 0;
-    stroke(0, 175);
+    
+    
+    //strokeWeight(sw);
+    noStroke();
+    stroke(r, b, g);
+    //fill(r, b, g);
+    //fill(0);
+    //rect(0,0,len,1);
 
     for (int i = 0; i < todo.length(); i++) 
     {
       char c = todo.charAt(i);
       
-      if (c == 'F' || c == 'G') 
+      if (c == 'F' || c == 'X') 
       {
         loc = new PVector(0, 0);
         forward(len);
@@ -80,7 +77,7 @@ class Turtle {
         
         if(count == 3)
         {
-          ends.add(new PVector(screenX(0,0),screenY(0,0), countdata));
+          ends.add(new PVector(screenX(0,0),screenY(0,0)));
           countdata++;
         }
         popMatrix();    
@@ -117,6 +114,15 @@ class Turtle {
   {
     len *= percent;
   }
+  
+  void setColor(float r, float b, float g, float a, float sw) 
+  {
+    this.r = r;
+    this.b = b;
+    this.g = g;
+    this.a =a;
+    this.sw = sw;
+  }
 
   void setToDo(String s) {
     todo = s;
@@ -127,12 +133,20 @@ class Turtle {
     PVector start = loc;
     PVector end = PVector.add(loc, polar(pixels, orientation));
     linev(start, end);
+    
     loc = end;
   }
   
   void linev(PVector a, PVector b) //new line function with PVectors. used by forward function
   {
     line(a.x, a.y, b.x, b.y);
+    //rect(a.x, a.y, b.x, b.y);
+    /*float longueur = PVector.dist(a,b);
+    float heading = PVector.sub(a,b).heading();
+    pushMatrix();
+    rotate(heading);
+    rect(a.x, a.y, a.x + longueur, a.y );
+    popMatrix();*/
   }
   
   PVector polar(float r, float theta) //converts an angle and radius into a vector
