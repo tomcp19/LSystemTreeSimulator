@@ -7,23 +7,27 @@ class Background implements IActable {
     
   boolean isParallax = false;
  
-  Background (String imgPath) {
+  Background (String imgPath) 
+  {
     img = loadImage(imgPath);
     initValues();
   }
   
-  Background (PImage img) {
+  Background (PImage img) 
+  {
     this.img = img;
     initValues();
   }
   
-  private void initValues() {
+  private void initValues() 
+  {
     position = new PVector();
     velocity = new PVector();
   }
   
   
-  void update(int deltaTime) {
+  void update(int deltaTime) 
+  {
     position.add(velocity);
     position.x = position.x % width;
   }
@@ -31,21 +35,20 @@ class Background implements IActable {
   float posX;
   float posY;
   
-  void display () {
+  void display () 
+  {
     
-    image (img,
-      position.x, position.y, 
-      img.width, img.height);
+    image (img,position.x, position.y,img.width, img.height);
 
-    if (isParallax) {
-      if (position.x < 0) {
-        image (img, 
-          (position.x + img.width), 
-          position.y, img.width, img.height);
-      } else if (position.x + img.width > width) {
-        image (img, 
-          (position.x - img.width), position.y, 
-          img.width, img.height);
+    if (isParallax) 
+    {
+      if (position.x < 0) 
+      {
+        image (img,(position.x + img.width),position.y, img.width, img.height);
+      } 
+      else if (position.x + img.width > width) 
+      {
+        image (img,(position.x - img.width), position.y,img.width, img.height);
       }
     }
   }

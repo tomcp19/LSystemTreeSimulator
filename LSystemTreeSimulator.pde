@@ -4,7 +4,13 @@ ControlP5 cp5;
 int c1, c2;
 float n,n1;
 int start_Time;
-boolean firstTime = true;
+float setAngle;
+PFont angleValue, axiom, seq;
+
+boolean changedText=false;
+String AngleText;
+boolean changedSlider=false;
+float AngleValue;
 
 //----Framerate ----//
 int currentTime;
@@ -15,28 +21,13 @@ int deltaTime;
 int counter;
 LSystem lsys;
 Turtle turtle;
-ArrayList<PVector> MainEnd;
-
-float angle;
-Rule[] ruleset;
-int nbRules;
-char axiom1;
-String equation1;
-String LSysChar;
-char axiom2;
-String equation2;
-//String LSysChar2;
-String nom;
-PFont angleValue, axiom, seq;
-
-float tr,tb,tg,ta,sw;
+boolean firstTime = true;
+ArrayList<Tree> Models = new ArrayList();
+Tree CurrentModel = new Tree();
 
 //---- fleurs et fruits ----//
-
-int r = 255;
-int b = 0;
-int g = 0;
-int o = 60;
+ArrayList<Fruit> Fruits = new ArrayList();
+boolean setFruits = false;
 
 //**********************************************************************************************
 //----Parallax ----//
@@ -50,12 +41,10 @@ void setup() {
     angleValue = createFont("Arial",16,true); 
     axiom = createFont("Arial",16,true); 
     seq = createFont("Arial",16,true); 
-   
-  
+     
 //----Framerate ----//
   currentTime = millis();
   previousTime = currentTime;
-  
   
   //----Parallax ----//
   fullScreen(P2D);
@@ -64,31 +53,26 @@ void setup() {
 //----L-System & Turtle ----//
   if(firstTime)
   {  
-    nbRules = 1;
-    angle = 25.7;
-    axiom1 = 'F';
-    LSysChar = "F";
-    equation1 = "F[+F]F[-F]F";   //"FF-[-F+F+F]+[+F-F-F]";      //"FF+[+F-F-F]-[-F+F+F]";
-    ruleset=new Rule[nbRules];
-    ruleset[0] = new Rule(axiom1, equation1);
-    tr = 254;
-    tb = 208;
-    tg= 110;
-    ta= 0;
-    sw = 2;
-    nom = "Herbacee";
+    Tree model1 = new Tree ("Herbacee", 1, 'F', "F[+F]F[-F]F", "F", 25.7, 254, 208, 110, 0, 2, 15, 5);
+    Tree model2 = new Tree ("Arbuste", 1, 'F', "FF-[-F+F+F]+[+F-F-F]", "F", 22.5, 133, 92, 53, 0, 4, 10, 10);
+    Tree model3 = new Tree ("Fougere", 2, 'X', "F[+X][-X]FX", "X", 25.7,'F',"FF", 0, 208, 0, 0, 2, 25,1);
+    
+    Models.add(model1);
+    Models.add(model2);
+    Models.add(model3);
 
     firstTime = false;
+    CurrentModel = Models.get(0);
+    setAngle = CurrentModel.getAngle();
    }
 
-    lsys = new LSystem( LSysChar, ruleset);
-    turtle = new Turtle(lsys.getSentence(), height/5, radians(angle));
-    turtle.setColor(tr,tb,tg,ta, sw);
+   lsys = new LSystem( CurrentModel.getLSysChar(), CurrentModel.getRuleset());
+   turtle = new Turtle(lsys.getSentence(), height/5, radians(CurrentModel.getAngle()));
+   turtle.setColor(CurrentModel.getTreeColorsR(),CurrentModel.getTreeColorsB(),CurrentModel.getTreeColorsG(),CurrentModel.getTreeColorsA(), CurrentModel.getTreeColorsSW());
     
         //----ControlP5 ----//
-    cp5 = new ControlP5(this);
-    cp5.addButton("Arbuste")
-    //.setBroadcast(false)
+   cp5 = new ControlP5(this);
+   cp5.addButton("Arbuste")
      .setValue(0)
      .setPosition(10,050)
      .setSize(400,100)
@@ -96,8 +80,7 @@ void setup() {
        .setSize(24)
      ;
      
-    cp5.addButton("Herbacee")
-    //.setBroadcast(false)
+   cp5.addButton("Herbacee")
      .setValue(1)
      .setPosition(10,150)//1300.150
      .setSize(400,100)
@@ -105,8 +88,7 @@ void setup() {
        .setSize(24)
      ;
      
-    cp5.addButton("Fougere")
-    //.setBroadcast(false)
+   cp5.addButton("Fougere")
      .setValue(2)
      .setPosition(10,260)
      .setSize(400,100)
@@ -114,26 +96,54 @@ void setup() {
        .setSize(24)
      ;
      
+   cp5.addSlider("setAngle")
+    .setPosition(100,800)
+    .setSize(250,50)
+    .setRange(0,90)
+    .setColorLabel(#000000)
+    .setLabel("Angle")
+    .getCaptionLabel()
+      .setFont(createFont("arial", 24))
+      .setVisible(false)
+     ;
+     
     cp5.addButton("Submit")
-    //.setBroadcast(false)
      .setValue(2)
      .setPosition(100,900)
      .setSize(200,50)
      .setCaptionLabel("Submit Dammit!")    
      .getCaptionLabel()
-       .setSize(24)
-       
+       .setSize(24)   
      ;
-     
-    /*String Axiom = cp5.get(Textfield.class,"textInput_1").getText();
-    for (int i = 0; i < 1; i++) 
-    {
-      axiom1 = Axiom.charAt(i);
-    }*/
-
-  cp5.addTextfield("Angle").setPosition(30, 800).setSize(60, 50).setAutoClear(false).setValue(str(angle)).setFont(createFont("arial", 24)).setColorLabel(#000000);
-  cp5.addTextfield("Axiom").setPosition(35, 700).setSize(30, 50).setAutoClear(false).setValue(str(axiom1)).setFont(createFont("arial", 24)).setColorLabel(#000000).getCaptionLabel().setVisible(false);;
-  cp5.addTextfield("Sequence").setPosition(100, 700).setSize(250, 50).setAutoClear(false).setValue(equation1).setFont(createFont("arial", 24)).setColorLabel(#000000);
+    
+    cp5.addTextfield("Angle")
+     .setPosition(30, 800)
+     .setSize(60, 50)
+     .setAutoClear(false)
+     .setValue(str(CurrentModel.getAngle()))
+     .setFont(createFont("arial", 24))
+     .setColorLabel(#000000);
+    
+    cp5.addTextfield("Axiom")
+     .setPosition(35, 700)
+     .setSize(30, 50)
+     .setAutoClear(false)
+     .setValue(str(CurrentModel.getAxiom1()))
+     .setFont(createFont("arial", 24))
+     .setColorLabel(#000000)
+     .getCaptionLabel()
+       .setVisible(false);
+    
+    cp5.addTextfield("Sequence")
+     .setPosition(100, 700)
+     .setSize(250, 50)
+     .setAutoClear(false)
+     .setValue(CurrentModel.getEquation1())
+     .setFont(createFont("arial", 24))
+     .setColorLabel(#000000)
+     .getCaptionLabel()
+       .getStyle()
+         .setMarginLeft(-70);
 }
 //***********************************************************************************************
 void draw() {
@@ -148,22 +158,21 @@ void draw() {
  
   update(deltaTime); 
   display();
-  displayTree();
   
   fill(255);
   stroke(10);
   rect(10, 370, 400, 600);
   textFont(angleValue,30); 
   fill(0); 
-  text("Nom : " +nom , 30, 420 ); 
-  text("Angle : " +angle + " °", 30, 500 ); 
+  text("Nom : " + CurrentModel.getNom() , 30, 420); 
+  text("Angle : " +CurrentModel.getAngle() + " °", 30, 500); 
   text("Custom", 15, 690 ); 
   text(" => ", 60, 735 ); 
-  textFont(axiom,30); 
-  text("Sequence : \n" + axiom1 + " => " + equation1 ,30,570);
-  if(equation2 != null)
+  text("Sequence : \n" + CurrentModel.getAxiom1() + " => " + CurrentModel.getEquation1(), 30, 570);
+  
+  if(CurrentModel.getEquation2() != null)
   {
-    text( axiom2 + " => " + equation2 ,30,650);
+    text( CurrentModel.getAxiom2() + " => " + CurrentModel.getEquation2() ,30,650);
   }
 
 }
@@ -173,8 +182,35 @@ void update(int delta) {
   //----Parallax ----//
   bgLayers.get(2).velocity.x = 0; 
   
-  for (Background bg : bgLayers) {
+  for (Background bg : bgLayers) 
+  {
     bg.update(delta);
+  } 
+
+  cp5.getController("setAngle").setUpdate(false);
+
+  if(cp5.get(Textfield.class, "Angle").isFocus())
+  {
+    changedText = true;
+  }
+  
+  if(changedText)
+  {
+    if(!cp5.get(Textfield.class, "Angle").isFocus())
+    {
+      cp5.getController("setAngle").update();//faire update de slider
+      cp5.getController("setAngle").setValue(Float.parseFloat((cp5.get(Textfield.class,"Angle").getText()).replace(',', '.')));
+      changedText=false;
+    }
+  }
+  
+  if(cp5.getController("setAngle").getValue() != AngleValue)//si chg slider
+  {
+     String val = String.format("%.1f",cp5.getController("setAngle").getValue());
+     cp5.get(Textfield.class, "Angle").setText(val);
+     AngleValue = cp5.getController("setAngle").getValue();
+     AngleText = val;
+     
   }
 }
 
@@ -183,44 +219,61 @@ void update(int delta) {
 void display () {
   
     //----Parallax ----//
-  for (Background bg : bgLayers) {
+  for (Background bg : bgLayers) 
+  {
     bg.display();
-    
+  }
+  displayTree();
     //----fleurs et fruits ----//
-    if (MainEnd != null)
-    {
-      for (PVector p:MainEnd)
-      {
-        fill(r, b, g, o);//red
+  if(counter >5)
+   {
+     if(!setFruits)
+     {
+        CurrentModel.setBranchTip(turtle.getEnds());
+        CurrentModel.setFruits(10,15);
+        Fruits = CurrentModel.getFruits();
+        setFruits = true;
+     }
+      
+      
+     for (Fruit f: Fruits)
+     {
+        fill(f.getColorR(), f.getColorB(), f.getColorG(), f.getColorO());//red
         //strokeWeight(0);
-          ellipse(p.x,p.y,8,8); 
-          
-          p.y += random(0, 2);
-          p.x += random(-1, 1);
-          
-      }
-    }
-  } 
-  
-      if (mousePressed && MainEnd != null) 
-      {
-        for (PVector p:MainEnd)
+        noStroke();
+        ellipse(f.location.x,f.location.y,f.size,f.size);   
+     }
+      
+     if(counter>6)
+     {
+        for (Fruit f: Fruits)
         {
-          if(mouseX < p.x)
+          fill(f.getColorR(), f.getColorB(), f.getColorG(), f.getColorO());
+          ellipse(f.location.x,f.location.y,f.size,f.size);
+
+          if(f.location.y < height - (f.getSize()/2))
           {
-            //PVector wind = new PVector (.1, 0);
-            p.x += 1;        
+            f.location.y += random(0, 4);
+            f.location.x += random(-1, 1);
           }
-          
-         if(mouseX > p.x)
+        
+          if (mousePressed) 
           {
-            //PVector wind = new PVector (-.1, 0);
-            p.x += -1;
-          }  
+              if(mouseX < f.location.x)
+              {
+                f.location.x += 1;        
+              }
+              
+             if(mouseX > f.location.x)
+              {
+                f.location.x += -1;
+              }  
+          }
         }
-    }
-  
-}
+      }
+    }  
+  }
+
 
 void displayTree () {
 
@@ -229,62 +282,28 @@ void displayTree () {
   
 }
 //***********************************************************************************************
-/*
-void mousePressed() {
- // println(equation1);
-  if (counter < 4) {
-    turtle.setCount();
-    pushMatrix();
-    lsys.generate();
-    //println(lsys.getSentence());
-    turtle.setToDo(lsys.getSentence());
-    turtle.changeLen(0.5);
-    popMatrix();
-    counter++;
-  }
-  if(counter == 3)
-  {
-    //println(counter);
-    MainEnd = turtle.getEnds();
-  }
-}*/
 
 void keyPressed() {
 
-    if(key == 'f') //pourra flusher
-    {
-      MainEnd = turtle.getEnds();
-      redraw();
-    }
   
     if (key == 'r') 
     {  
-      MainEnd.clear();
-       setup();
+       Reset();
     }
   
     if (key == 'g') 
     {  
-         // println(equation1);
         if (counter < 4) 
         {
           turtle.setCount();
           pushMatrix();
           lsys.generate();
-          //println(lsys.getSentence());
           turtle.setToDo(lsys.getSentence());
           turtle.changeLen(0.5);
           popMatrix();
-          counter++;
         }
-        if(counter == 3)
-        {
-          //println(counter);
-          MainEnd = turtle.getEnds();
-        }
+        counter++;
     }
-  
-  
 }
 
 //----Parallax ----//
@@ -318,138 +337,82 @@ private void loadBackgroundLayers() {
 
 public void Fougere() 
 {
-  if(millis()-start_Time<2000){return;}
-  //println("testde mute fougere ");
-  nom = "Fougere";
-  r=255;
-  b=0;
-  g=0;
-  o=100;
-  nbRules = 2;
-  angle = 25.7;
-  axiom1 = 'X';
-  LSysChar = "X";
-  equation1 ="F[+X][-X]FX";
-  axiom2 = 'F';
-  equation2 ="FF";
-  //ruleset[0] = null;
-  //ruleset[1] = null;
-  ruleset = new Rule[2];
-  ruleset[0] = new Rule(axiom1, equation1);
-  ruleset[1] = new Rule(axiom2, equation2);
-  nom = "Fougere";
-  tr = 53;
-  tb = 136;
-  tg= 86;
-  ta= 0;
-  sw = 2;
+  if(millis()-start_Time<2000)
+  {
+    return;
+  }
   
-  MainEnd.clear();
-  firstTime = false;
-  setup();
+  CurrentModel=Models.get(2);
+  setAngle = CurrentModel.getAngle();
+  Reset(); 
 }
 
 public void Arbuste() 
 {
-  if(millis()-start_Time<2000){return;}
-  //println("test de mute arbuste ");
-  r=0;
-  b=255;
-  g=0;
-  o=100;
-  nbRules = 1;
-  //ruleset[0]=null;
-  //ruleset[1] = null;
-  ruleset = new Rule[1];
-  angle = 22.5;
-  axiom1 = 'F';
-  axiom2 = ' ';
-  equation2 = null;
-  LSysChar = "F";
-  equation1 = "FF-[-F+F+F]+[+F-F-F]";
-  ruleset[0] = new Rule(axiom1, equation1);
-  nom = "Arbuste";
-  tr = 133;
-  tb = 92;
-  tg= 53;
-  ta= 0;
-  sw = 4;
-  MainEnd.clear();
-  firstTime = false;
- 
-  setup();
+  if(millis()-start_Time<2000)
+  {
+    return;
+  }
   
-}
-
-public void Submit() {
-  if(millis()-start_Time<1000){return;}
-  println("the following text was submitted :");
-  String Axiom = cp5.get(Textfield.class,"Axiom").getText();
-      for (int i = 0; i < 1; i++) 
-    {
-      axiom1 = Axiom.charAt(i);
-    }
-  angle = Float.parseFloat(cp5.get(Textfield.class,"Angle").getText());
-  equation1 = cp5.get(Textfield.class,"Sequence").getText();
+  CurrentModel = Models.get(1);
+  setAngle = CurrentModel.getAngle();
+  Reset();
   
-  println(" textInput 1 = " + axiom1);
-  println(" textInput 2 = " + equation1);
-  println();
-  
-  //angle = 25.7;
-  //axiom1 = 'F';
-  LSysChar = Axiom;
-  //equation1 = "F[+F]F[-F]F";
-  axiom2 = ' ';
-  equation2 = null;
-  ruleset = new Rule[1];
-  ruleset[0] = new Rule(axiom1, equation1);
-  nom = "Custom";
-  tr = 255;
-  tb = 255;
-  tg= 255;
-  ta= 0;
-  sw = 2;
-  
-    MainEnd.clear();
-
-  firstTime = false;
-  setup();
 }
 
 public void Herbacee() 
 {
-  if(millis()-start_Time<2000){return;}
+  if(millis()-start_Time<2000)
+  {
+    return;
+  }
   
-  //println("testde mute herb ");
-  r=0;
-  b=0;
-  g=255;
-  o=100;
-  nbRules = 1;
-  angle = 25.7;
-  axiom1 = 'F';
-  LSysChar = "F";
-  equation1 = "F[+F]F[-F]F";
-    axiom2 = ' ';
-  equation2 = null;
-  ruleset = new Rule[1];
-  ruleset[0] = new Rule(axiom1, equation1);
-  nom = "Herbacee";
-  tr = 254;
-  tb = 208;
-  tg= 110;
-  ta= 0;
-  sw = 2;
-  
-  MainEnd.clear();
+  CurrentModel = Models.get(0);
+  setAngle = CurrentModel.getAngle();
+  Reset();
 
+}
+
+public void Submit() { //a des erreurs de broadcast lors du launch
+  if(millis()-start_Time<1000)
+  {
+    return;
+  }
+  
+  //récupération des données et formatage
+  char a = 'F';
+  String StrCustomAxiom = cp5.get(Textfield.class,"Axiom").getText();
+  
+  for (int i = 0; i < 1; i++) 
+    {
+      a = StrCustomAxiom.charAt(i);
+    }
+    
+  StrCustomAxiom = Character.toString(a);
+  Float CustomAngle = Float.parseFloat((cp5.get(Textfield.class,"Angle").getText()).replace(',', '.'));
+  String Equation = cp5.get(Textfield.class,"Sequence").getText();
+  
+  if(CurrentModel.getNom() != "Fougere")
+  {
+    CurrentModel = new Tree("Custom", 1, a, Equation, StrCustomAxiom, CustomAngle, 0, 0, 0, 0, 2, 10, 3);
+  }
+  
+  else
+  { //pour prendre plus qu'une fougere custom, on doit reloader la fougere entre les itération sinon il va prendre le modele avec 1 seul axiome. Le générateur a été fait avec une seule règle à suivre en tête, pas 2 ou +
+    CurrentModel = new Tree("Custom", 2, a, Equation, StrCustomAxiom, CustomAngle, 'F', "FF", 0, 0, 0, 0, 2, 10, 3);
+    println(a);
+  }
+  
+  setAngle = CustomAngle;
+  Reset();
+}
+
+public void Reset()
+{
+  Fruits.clear();
+  setFruits=false;
+  counter = 0;
   firstTime = false;
   setup();
   
 }
-/*
-public void controlEvent(ControlEvent theEvent) {
-  println(theEvent.getController().getName());
-  //n = 0;
-}*/

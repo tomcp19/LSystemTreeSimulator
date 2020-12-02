@@ -13,55 +13,48 @@ class LSystem {
   Rule[] ruleset;      // The ruleset (an array of Rule objects)
   int generation;      // Keeping track of the generation #
 
-  // Construct an LSystem with a startin sentence and a ruleset
-  LSystem(String axiom, Rule[] r) {
+
+  LSystem(String axiom, Rule[] r) 
+  {
     sentence = axiom;
     ruleset = r;
     generation = 0;
   }
 
-  // Generate the next generation
   void generate() {
 
     StringBuffer nextgen = new StringBuffer();
 
-    for (int i = 0; i < sentence.length(); i++) {
+    for (int i = 0; i < sentence.length(); i++) 
+    {
 
       char curr = sentence.charAt(i);
 
       String replace = "" + curr;
 
-      for (int j = 0; j < ruleset.length; j++) {
+      for (int j = 0; j < ruleset.length; j++) 
+      {
         char a = ruleset[j].getA();
 
-        if (a == curr) {
+        if (a == curr) 
+        {
           replace = ruleset[j].getB();
           break; 
         }
       }
-      // Append replacement String
       nextgen.append(replace);
     }
-    // Replace sentence
     sentence = nextgen.toString();
-    // Increment generation
     generation++;
   }
 
-  String getSentence() {
+  String getSentence() 
+  {
     return sentence; 
   }
 
-  int getGeneration() {
+  int getGeneration() 
+  {
     return generation; 
   }
- /* 
- public void setLSystem(String axiom, Rule[] r)
- {
-     sentence = axiom;
-    ruleset = r;
-    generation = 0;
- }*/
-
-
 }

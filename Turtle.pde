@@ -1,4 +1,4 @@
-// The Nature of Code
+// Modifié de The Nature of Code
 // Daniel Shiffman
 // http://natureofcode.com
 
@@ -13,7 +13,6 @@ class Turtle {
   PVector loc;
   float orientation;
   int count = 0;
-  int countdata = 0;
   
   boolean tip;
   int colorIndex;
@@ -21,7 +20,8 @@ class Turtle {
   boolean print = true;
   float r, b, g, a, sw;
 
-  Turtle(String s, float l, float t) {
+  Turtle(String s, float l, float t) 
+  {
     todo = s;
     len = l; 
     theta = t;
@@ -32,21 +32,15 @@ class Turtle {
   } 
   
 
-  void render() {
-    
+  void render() 
+  {
+    //place dans la bonne orientation
     pushMatrix();
     translate(width/2, height);
     rotate(-PI/2);
-    
-    countdata = 0;
-    
-    
-    //strokeWeight(sw);
-    noStroke();
+       
+    strokeWeight(sw);
     stroke(r, b, g);
-    //fill(r, b, g);
-    //fill(0);
-    //rect(0,0,len,1);
 
     for (int i = 0; i < todo.length(); i++) 
     {
@@ -58,32 +52,32 @@ class Turtle {
         forward(len);
         translate(len, 0);
         
-      } else if (c == '+') 
+      } 
+      else if (c == '+') 
       {
         
         rotate(theta);
 
-      } else if (c == '-')   
+      } 
+      else if (c == '-')   
       {
         
         rotate(-theta);
 
-      } else if (c == '[') 
+      } 
+      else if (c == '[') 
       {
         pushMatrix();
 
       } else if (c == ']') 
       {
         
-        if(count == 3)
+        if(count == 5)
         {
           ends.add(new PVector(screenX(0,0),screenY(0,0)));
-          countdata++;
         }
-        popMatrix();    
-       
+        popMatrix();     
       }
-
     }
     
     if(setCount)
@@ -124,33 +118,26 @@ class Turtle {
     this.sw = sw;
   }
 
-  void setToDo(String s) {
+  void setToDo(String s) 
+  {
     todo = s;
   }
   
-  void forward(float pixels) //calculate positions when moving forward
+  void forward(float pixels) //calcaul de la position pour la fin/extrémité
   {
     PVector start = loc;
     PVector end = PVector.add(loc, polar(pixels, orientation));
-    linev(start, end);
-    
+    linev(start, end); 
     loc = end;
   }
   
-  void linev(PVector a, PVector b) //new line function with PVectors. used by forward function
+  void linev(PVector a, PVector b) //line() mais avec vector
   {
     line(a.x, a.y, b.x, b.y);
-    //rect(a.x, a.y, b.x, b.y);
-    /*float longueur = PVector.dist(a,b);
-    float heading = PVector.sub(a,b).heading();
-    pushMatrix();
-    rotate(heading);
-    rect(a.x, a.y, a.x + longueur, a.y );
-    popMatrix();*/
   }
   
-  PVector polar(float r, float theta) //converts an angle and radius into a vector
+  PVector polar(float r, float theta) //conversion angle et rayon en vecteur
   {
-    return new PVector(r*cos(theta),r*sin(-theta)); // negate y for left handed coordinate system
+    return new PVector(r*cos(theta),r*sin(-theta));
   }
 }
