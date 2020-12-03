@@ -10,7 +10,7 @@ int r;
 int b;
 int g;
 int o;
-boolean isVisible;
+float lifespan;
   
   
     Fruit () 
@@ -27,7 +27,7 @@ boolean isVisible;
     this.velocity = new PVector (0, 0);
     this.acceleration = new PVector (0 , 0);
     this.weight = size;
-    isVisible = true;
+    lifespan = 1000;
   }
   
   
@@ -62,5 +62,50 @@ boolean isVisible;
   public int getSize()
   {
     return int(size);
+  }
+  
+  void applyForce (PVector force) 
+  {
+    PVector f = PVector.div (force, weight);
+    this.acceleration.add(f);
+  }
+  
+  void update()
+  {
+    velocity.add(acceleration);
+    location.add(velocity);
+    acceleration = new PVector(0,0);
+  }
+  
+  boolean isDead() 
+    {
+    if (lifespan < 0.0) 
+    {
+      return true;
+    } 
+    else {
+      return false;
+    }
+  }
+
+  
+  void checkEdges() 
+  {
+    if (location.x > width) 
+    {
+      location.x = width;
+      velocity.x *= -1;
+    } 
+    else if (location.x < 0) //taille du menu de modelisation
+    {
+      location.x = 0;
+      velocity.x *= -1;
+    }
+
+    if (location.y >= height) 
+    {
+      velocity.y *= -0.3; //on ne veut pas que ca rebondissent trop, ce sont des feuilles/fleurs/fruits
+      location.y = height;
+    }
   }
 }

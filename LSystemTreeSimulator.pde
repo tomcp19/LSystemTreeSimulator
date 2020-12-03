@@ -1,3 +1,10 @@
+ArrayList<Mover> flock;
+int flockSize = 2;
+Attractor a;
+boolean initAttractor = true;
+boolean popMover = false;
+int popCounter;
+
 //----ControlP5 ----//
 import controlP5.*;
 ControlP5 cp5;
@@ -41,6 +48,18 @@ void setup() {
     angleValue = createFont("Arial",16,true); 
     axiom = createFont("Arial",16,true); 
     seq = createFont("Arial",16,true); 
+    
+    flock = new ArrayList<Mover>();
+  
+  for (int i = 0; i < flockSize; i++) 
+  {
+    Mover m = new Mover(new PVector(random(630, width), random(0, height)), new PVector(random (-2, 2), random(-2, 2)));
+    m.fillColor = color(0, 0, 0);
+    flock.add(m);
+  }
+  
+  a = new Attractor();
+  popCounter = 0;
      
 //----Framerate ----//
   currentTime = millis();
@@ -174,6 +193,22 @@ void draw() {
   {
     text( CurrentModel.getAxiom2() + " => " + CurrentModel.getEquation2() ,30,650);
   }
+  
+  if(setFruits)
+  {
+    if(initAttractor)
+    {
+     a.setAttractor(Fruits.get(0).location.x,Fruits.get(0).location.y, Fruits.get(0).size);
+     initAttractor = false;
+     popMover = true;
+    }
+
+  }
+  
+  if(!a.isDead())
+  {
+     a.display();
+  }
 
 }
 
@@ -212,6 +247,80 @@ void update(int delta) {
      AngleText = val;
      
   }
+  
+    for (Mover m : flock) 
+    {
+    m.flock(flock);
+    m.update(delta);
+    if(setFruits)
+    {
+      if(!a.isDead())
+      {
+        a.update();
+        a.setPosition(Fruits.get(0).location.x,Fruits.get(0).location.y);
+        PVector force = a.attract(m);
+        m.applyForce(force);
+      }
+      if(popMover && a.isDead())
+      {
+        PVector popUpward = new PVector(50,-50);
+        m.applyForce(popUpward); //sert de debug si pris dans le plancher
+        popCounter++;
+        if(popCounter >10)
+        {
+        popMover = false;
+        }
+      }
+    }
+   }
+  
+     if(setFruits)
+     {
+
+       for (Fruit f: Fruits)
+       {
+        if(!a.isDead())
+          {
+             PVector gravity = new PVector (0,random(0, 2)*0.1*f.weight);//avec effet de flottement
+             PVector floating = new PVector (random(-2, 2),0);//avec effet de flottement de gauche a droite
+             
+             float c = 0.05;
+             PVector friction = f.velocity.get();
+             friction.mult(-1); 
+             friction.normalize();
+             friction.mult(c);
+             
+             f.applyForce(friction);
+             f.applyForce(gravity);
+             if(f.location.y < height-f.size/2)
+             {
+               f.applyForce(floating);
+             }
+                      
+             if (mousePressed) 
+              {
+    
+                if(mouseX < f.location.x)
+                {
+                    PVector wind = new PVector(1, 0);
+                    f.applyForce(wind);      
+                }
+                  
+                if(mouseX > f.location.x)
+                {
+                    PVector wind = new PVector(-1, 0);
+                    f.applyForce(wind);
+                  }  
+              }
+             f.update();
+             if(!a.isDead())
+             {       
+              
+             }
+             f.checkEdges();
+           }
+       }
+     }
 }
 
 //***********************************************************************************************
@@ -224,6 +333,28 @@ void display () {
     bg.display();
   }
   displayTree();
+  
+    for (Mover m : flock) 
+    {
+      if (mousePressed) 
+      {
+
+       if(mouseX < m.location.x)
+       {
+          PVector wind = new PVector(.1, 0);
+          m.applyForce(wind);
+       
+       }
+              
+       if(mouseX > m.location.x)
+       {
+         PVector wind = new PVector(-.1, 0);
+         m.applyForce(wind);
+             
+       }  
+     }
+      m.display();
+    }
     //----fleurs et fruits ----//
   if(counter >5)
    {
@@ -235,7 +366,8 @@ void display () {
         setFruits = true;
      }
       
-      
+    if(!a.isDead())
+    {
      for (Fruit f: Fruits)
      {
         fill(f.getColorR(), f.getColorB(), f.getColorG(), f.getColorO());//red
@@ -250,27 +382,27 @@ void display () {
         {
           fill(f.getColorR(), f.getColorB(), f.getColorG(), f.getColorO());
           ellipse(f.location.x,f.location.y,f.size,f.size);
-
-          if(f.location.y < height - (f.getSize()/2))
-          {
-            f.location.y += random(0, 4);
-            f.location.x += random(-1, 1);
-          }
         
           if (mousePressed) 
           {
+
               if(mouseX < f.location.x)
               {
-                f.location.x += 1;        
+                PVector wind = new PVector(.1, 0);
+                f.applyForce(wind);
+       
               }
               
              if(mouseX > f.location.x)
               {
-                f.location.x += -1;
+                PVector wind = new PVector(-.1, 0);
+                f.applyForce(wind);
+             
               }  
           }
         }
       }
+    }
     }  
   }
 
@@ -400,7 +532,6 @@ public void Submit() { //a des erreurs de broadcast lors du launch
   else
   { //pour prendre plus qu'une fougere custom, on doit reloader la fougere entre les itération sinon il va prendre le modele avec 1 seul axiome. Le générateur a été fait avec une seule règle à suivre en tête, pas 2 ou +
     CurrentModel = new Tree("Custom", 2, a, Equation, StrCustomAxiom, CustomAngle, 'F', "FF", 0, 0, 0, 0, 2, 10, 3);
-    println(a);
   }
   
   setAngle = CustomAngle;
@@ -413,6 +544,8 @@ public void Reset()
   setFruits=false;
   counter = 0;
   firstTime = false;
+  initAttractor = true;
+    popCounter = 0;
   setup();
   
 }
